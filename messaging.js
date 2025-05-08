@@ -21,7 +21,6 @@
   [].forEach.call(
             document.querySelectorAll('.result-link'),
             function(el){
-
                 el.addEventListener('click', function(e) {
                     var inspectionPoint = e.target.getAttribute("data-inspect");
                     chrome.devtools.inspectedWindow.eval(' inspect(document.querySelector("[inspect=\''+inspectionPoint+'\']")) ');
