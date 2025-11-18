@@ -1,80 +1,71 @@
-// This is included and executed in the inspected page
 console.log("HTML helper extension is loaded");
 
-var objectsFound =[];
+let objectsFound = [];
+function enumerateObjectsByCriteria(formObj) {
+    console.log("in enumerateObjectsByCriteria formObj:", formObj, typeof formObj); // Debug log
 
-function enumerateObjectsByCriteria(formObj, criteria){
-
-    console.log("formObj ", formObj);
-    if(!formObj || formObj.tags){
-        return "No criteria for search was received"
+    // Parse formObj only if it is a string
+    if (typeof formObj === "string") {
+        try {
+            formObj = JSON.parse(formObj);
+        } catch (err) {
+            console.error("Failed to parse formObj:", formObj, err);
+            return "Invalid input data";
+        }
     }
 
-    formObj = JSON.parse(formObj);
-
-    var inspectObjs = formObj["tags"].split(",");
-    var inspectTags = formObj["tags"];
-    var doesHave = (formObj["have"] === "1");
-    var attributeToInspect = formObj["attr"];
-    var attributeValue = formObj["attr-value"]
-    var oCollection;
-    var found = [];
-    //reset page after prev. search
-    for(var i= 0; i<objectsFound.length;i++){
-        objectsFound[i].removeAttribute("inspect");
-        objectsFound[i].style.removeProperty ("background-color");
+    if (!formObj || !formObj.tags) {
+        console.error("Invalid formObj: Missing 'tags' property.");
+        return "No criteria for search was received";
     }
 
-    var qSelector ="";
-    for(var i =0; i< inspectObjs.length; i++){
+    const inspectObjs = formObj.tags.split(",");
+    const doesHave = formObj.have === "1";
+    const attributeToInspect = formObj.attr;
+    const attributeValue = formObj["attr-value"];
+    let qSelector = "";
+
+    console.log("Inspecting objects and attributes:", inspectObjs, doesHave, attributeToInspect, attributeValue); // Debug log
+
+    for (let i = 0; i < inspectObjs.length; i++) {
         qSelector += inspectObjs[i];
-        if(doesHave){
-            if (attributeValue.trim().length >0){
-                qSelector+="["+attributeToInspect+"~='"+attributeValue.trim()+"']";
-            }
-            else{
-                qSelector+="["+attributeToInspect+"]";
-            }
-
+        if (doesHave) {
+            qSelector += attributeValue.trim()
+                ? `[${attributeToInspect}~='${attributeValue.trim()}']`
+                : `[${attributeToInspect}]`;
+        } else {
+            qSelector += `:not([${attributeToInspect}])`;
         }
-        else{
-            qSelector += ":not(["+attributeToInspect+"])"
-        }
-        if(inspectObjs[i+1]){
-            qSelector+=",";
+        if (inspectObjs[i + 1]) {
+            qSelector += ",";
         }
     }
 
-    oCollection = document.querySelectorAll(qSelector);
-    if(oCollection.length <1){
+    console.log("Constructed selector:", qSelector); // Debug log
 
-        return "<h2  class='search-term no-results'>Your search term <i>'"+qSelector+"'</i> returned no results</h2>"
-    }
-    found.push(" <h2  class='search-term'>Search term:'"+qSelector+"'</h2>");
-    var strPos, str, tagName = "";
-    for(var i =0; i< oCollection.length; i++){
-        if(oCollection[i].tagName!=tagName){
-            found.push("<h3 class='tag-title'>"+oCollection[i].tagName.toUpperCase()+ " elements </h3>");
-        }
-        tagName = oCollection[i].tagName;
-        strPos = oCollection[i].outerHTML.toString().indexOf(">")
-        str = oCollection[i].outerHTML.toString();
-
-        found.push("<a  href='#' ><xmp class='result-link'   data-inspect='inspect"+i+"' >"+str.substr(0, strPos+1).toLowerCase()+"...</"+oCollection[i].tagName.toLowerCase()+"></xmp></a>");
-        oCollection[i].setAttribute("inspect","inspect"+i);
-        oCollection[i].style.backgroundColor= 'yellow';
-        objectsFound.push(oCollection[i]);
+    const oCollection = document.querySelectorAll(qSelector);
+    if (oCollection.length < 1) {
+        console.warn(`No elements matched the selector: ${qSelector}`);
+        return `<h2 class='search-term no-results'>Your search term <i>'${qSelector}'</i> returned no results</h2>`;
     }
 
-    return  found.join(" ");
+    let found = [`<h2 class='search-term'>Search term: '${qSelector}'</h2>`];
+
+    oCollection.forEach((el, i) => {
+        const strPos = el.outerHTML.indexOf(">");
+        const str = el.outerHTML;
+
+        found.push(
+            `<a href='#'><xmp class='result-link' data-inspect='inspect${i}'>${str
+                .substr(0, strPos + 1)
+                .toLowerCase()}...</${el.tagName.toLowerCase()}></xmp></a>`
+        );
+
+        el.setAttribute("inspect", `inspect${i}`);
+        el.style.backgroundColor = "yellow";
+        objectsFound.push(el);
+    });
+
+    console.log("Successfully found matched elements:", found); // Debug log
+    return found.join(" ");
 }
-
-window.addEventListener("error", function (e) {
-    if(e.error){
-      alert("Error occured: " + e.error.message);
-    }
-
-    return false;
-})
-
-//console.log("found ", found)
