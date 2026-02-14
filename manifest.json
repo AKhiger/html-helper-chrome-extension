@@ -1,19 +1,13 @@
 {
-  "name": "HTML Helper",
-  "version": "0.2",
-  "description": "Helps visually identify multiple HTML tags by certain criteria",
+  "name": "TagScout",
+  "version": "1.0",
+  "description": "DevTools panel to find and highlight HTML elements by tag name, attribute presence, or value — instantly spot what's missing or misplaced in your markup.",
   "devtools_page": "devtools.html",
   "author": "Anna Khiger",
-  "background": {
-    "service_worker": "background.js"
-  },
-  "permissions": [
-    "tabs",
-    "scripting"
-  ],
-  "host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ],
-  "manifest_version": 3
+  "manifest_version": 3,
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
 }
